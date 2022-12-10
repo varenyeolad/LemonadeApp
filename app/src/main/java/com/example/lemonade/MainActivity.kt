@@ -32,18 +32,25 @@ class MainActivity : AppCompatActivity() {
     private val LEMONADE_STATE = "LEMONADE_STATE"
     private val LEMON_SIZE = "LEMON_SIZE"
     private val SQUEEZE_COUNT = "SQUEEZE_COUNT"
+
     // SELECT represents the "pick lemon" state
     private val SELECT = "select"
+
     // SQUEEZE represents the "squeeze lemon" state
     private val SQUEEZE = "squeeze"
+
     // DRINK represents the "drink lemonade" state
     private val DRINK = "drink"
+
     // RESTART represents the state where the lemonade has been drunk and the glass is empty
     private val RESTART = "restart"
+
     // Default the state to select
     private var lemonadeState = "select"
+
     // Default lemonSize to -1
     private var lemonSize = -1
+
     // Default the squeezeCount to -1
     private var squeezeCount = -1
 
@@ -66,12 +73,12 @@ class MainActivity : AppCompatActivity() {
         lemonImage = findViewById(R.id.image_lemon_state)
         setViewElements()
         lemonImage!!.setOnClickListener {
-            // TODO: call the method that handles the state when the image is clicked
+            clickLemonImage()
         }
         lemonImage!!.setOnLongClickListener {
-            // TODO: replace 'false' with a call to the function that shows the squeeze count
-            false
+            showSnackbar()
         }
+
     }
 
     /**
@@ -96,10 +103,36 @@ class MainActivity : AppCompatActivity() {
         //  lemonade making progression (or at least make some changes to the current state in the
         //  case of squeezing the lemon). That should be done in this conditional statement
 
+        if (SELECT == lemonadeState) {
+            lemonadeState = SQUEEZE
+            val tree: LemonTree = lemonTree
+            lemonSize = tree.pick()
+            squeezeCount = 0
+        }
+
         // TODO: When the image is clicked in the SELECT state, the state should become SQUEEZE
         //  - The lemonSize variable needs to be set using the 'pick()' method in the LemonTree class
         //  - The squeezeCount should be 0 since we haven't squeezed any lemons just yet.
 
+        else if (SQUEEZE == lemonadeState) {
+            squeezeCount += 1
+            lemonSize -= 1
+
+            if (lemonSize == 0) {
+                lemonadeState = DRINK
+            } else {
+                lemonadeState = SQUEEZE
+            }
+        }
+
+        else if (DRINK == lemonadeState) {
+            lemonadeState = RESTART
+            lemonSize = -1
+        }
+
+         else if (RESTART == lemonadeState) {
+            lemonadeState = SELECT
+        }
         // TODO: When the image is clicked in the SQUEEZE state the squeezeCount needs to be
         //  INCREASED by 1 and lemonSize needs to be DECREASED by 1.
         //  - If the lemonSize has reached 0, it has been juiced and the state should become DRINK
@@ -111,6 +144,7 @@ class MainActivity : AppCompatActivity() {
 
         // TODO: lastly, before the function terminates we need to set the view elements so that the
         //  UI can reflect the correct state
+        setViewElements()
     }
 
     /**
@@ -118,41 +152,64 @@ class MainActivity : AppCompatActivity() {
      */
     private fun setViewElements() {
         val textAction: TextView = findViewById(R.id.text_action)
+        val lemonImage: ImageView = findViewById(R.id.image_lemon_state)
         // TODO: set up a conditional that tracks the lemonadeState
+        when (lemonadeState) {
+            SELECT -> {
+                textAction.text = "Click to select lemon!"
+                lemonImage.setImageResource(R.drawable.lemon_tree)
 
-        // TODO: for each state, the textAction TextView should be set to the corresponding string from
-        //  the string resources file. The strings are named to match the state
+            }
+            SQUEEZE -> {
+                textAction.text = "Click to juice the lemon!"
+                lemonImage.setImageResource(R.drawable.lemon_squeeze)
+            }
 
-        // TODO: Additionally, for each state, the lemonImage should be set to the corresponding
-        //  drawable from the drawable resources. The drawables have the same names as the strings
-        //  but remember that they are drawables, not strings.
+            DRINK -> {
+                textAction.text = " Click to drink your lemonade!"
+                lemonImage.setImageResource(R.drawable.lemon_drink)
+            }
+
+            RESTART -> {
+                textAction.text = "Click to start again!"
+                lemonImage.setImageResource(R.drawable.lemon_restart)
+            }
+
+            // TODO: for each state, the textAction TextView should be set to the corresponding string from
+            //  the string resources file. The strings are named to match the state
+
+            // TODO: Additionally, for each state, the lemonImage should be set to the corresponding
+            //  drawable from the drawable resources. The drawables have the same names as the strings
+            //  but remember that they are drawables, not strings.
+        }
+    }
+
+        /**
+         * === DO NOT ALTER THIS METHOD ===
+         *
+         * Long clicking the lemon image will show how many times the lemon has been squeezed.
+         */
+        private fun showSnackbar(): Boolean {
+            if (lemonadeState != SQUEEZE) {
+                return false
+            }
+            val squeezeText = getString(R.string.squeeze_count, squeezeCount)
+            Snackbar.make(
+                findViewById(R.id.constraint_Layout),
+                squeezeText,
+                Snackbar.LENGTH_SHORT
+            ).show()
+            return true
+        }
     }
 
     /**
-     * === DO NOT ALTER THIS METHOD ===
-     *
-     * Long clicking the lemon image will show how many times the lemon has been squeezed.
+     * A Lemon tree class with a method to "pick" a lemon. The "size" of the lemon is randomized
+     * and determines how many times a lemon needs to be squeezed before you get lemonade.
      */
-    private fun showSnackbar(): Boolean {
-        if (lemonadeState != SQUEEZE) {
-            return false
+    class LemonTree {
+        fun pick(): Int {
+            return (2..4).random()
         }
-        val squeezeText = getString(R.string.squeeze_count, squeezeCount)
-        Snackbar.make(
-            findViewById(R.id.constraint_Layout),
-            squeezeText,
-            Snackbar.LENGTH_SHORT
-        ).show()
-        return true
     }
-}
 
-/**
- * A Lemon tree class with a method to "pick" a lemon. The "size" of the lemon is randomized
- * and determines how many times a lemon needs to be squeezed before you get lemonade.
- */
-class LemonTree {
-    fun pick(): Int {
-        return (2..4).random()
-    }
-}
